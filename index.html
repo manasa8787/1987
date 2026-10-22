@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تطبيق مندوب الفارما - النظام الشامل الذكي</title>
+
+    <!-- الخطوط والأيقونات والمكتبات (SheetJS, html2pdf, Chart.js) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #0d1b2a;
+            --bg-card-blue: #1b2a4a;
+            --accent-yellow: #e6a100;
+            --accent-yellow-light: #f5b719;
+            --text-white: #ffffff;
+            --text-muted: #a0aec0;
+            --bg-light: #f4f6f9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 0;
+            color: var(--text-white);
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 880px;
+            background-color: var(--bg-light);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @media (min-width: 480px) {
+            .phone-container {
+                height: 92vh;
+                border-radius: 36px;
+                border: 8px solid #222;
+            }
+        }
+
+        .status-bar {
+            background-color: var(--bg-dark);
+            color: var(--text-white);
+            padding: 10px 20px 5px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 10;
+        }
+
+        .status-icons i { margin-left: 5px; font-size: 12px; }
+
+        .header {
+            background-color: var(--bg-dark);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            z-index: 10;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-white);
+            font-weight: 800;
+            font-size: 17px;
+        }
+
+        .brand-logo span { color: var(--accent-yellow); }
+        .brand-logo i { color: var(--accent-yellow); font-size: 18px; }
+
+        .smart-reminder-bar {
+            background: linear-gradient(90deg, #1e3a8a, #0284c7);
+            color: #fff;
+            padding: 6px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .target-box {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            color: var(--bg-dark);
+        }
+
+        .progress-bar-bg {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 10px;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-bar-fill {
+            background: linear-gradient(90deg, var(--accent-yellow), #166534);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .page-view {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 16px 90px 16px;
+            background: linear-gradient(180deg, #ffffff 0%, #f4f6f9 100%);
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .page-view.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header-title {
+            color: var(--bg-dark);
+            font-size: 16px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .card-item {
+            display: flex;
+            align-items: center;
+            border-radius: 14px;
+            padding: 10px 14px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+            transition: transform 0.15s;
+            cursor: pointer;
+        }
+
+        .card-item:active { transform: scale(0.97); }
+
+        .card-blue { background-color: var(--bg-card-blue); color: var(--text-white); }
+        .card-blue .card-number, .card-blue .card-icon { color: var(--accent-yellow); }
+        .card-blue .card-subtext { color: #d1d5db; }
+
+        .card-yellow { background: linear-gradient(135deg, var(--accent-yellow) 0%, #d99100 100%); color: var(--bg-dark); }
+        .card-yellow .card-number, .card-yellow .card-icon { color: var(--bg-dark); }
+        .card-yellow .card-subtext { color: #2c2000; }
+
+        .card-number { font-size: 28px; font-weight: 900; line-height: 1; min-width: 40px; }
+        .card-details { flex: 1; padding-right: 8px; }
+        .card-title { font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+        .card-subtext { font-size: 10.5px; font-weight: 600; }
+        .card-icon { font-size: 20px; margin-left: 5px; }
+
+        .section-title {
+            color: var(--bg-dark);
+            font-size: 13.5px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .item-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+        }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 9.5px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .badge-blue { background-color: #1b2a4a; color: #ffffff; }
+        .badge-yellow { background-color: var(--accent-yellow); color: var(--bg-dark); }
+        .badge-green { background-color: #166534; color: #ffffff; }
+        .badge-red { background-color: #991b1b; color: #ffffff; }
+        .badge-orange { background-color: #c2410c; color: #ffffff; }
+
+        .form-box {
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-group { margin-bottom: 8px; }
+        .form-group label {
+            display: block;
+            color: var(--bg-dark);
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+            outline: none;
+            background-color: #fff;
+        }
+
+        .product-row {
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10.5px;
+            margin: 8px 0;
+            background: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .invoice-table th {
+            background-color: var(--bg-card-blue);
+            color: #fff;
+            padding: 6px 8px;
+            text-align: right;
+            font-size: 10px;
+        }
+
+        .invoice-table td {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 6px 8px;
+            color: var(--bg-dark);
+            font-weight: 600;
+        }
+
+        .btn-add-item {
+            background-color: #e2e8f0;
+            color: var(--bg-dark);
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .total-box {
+            background: var(--bg-card-blue);
+            color: var(--text-white);
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .total-box span { font-size: 16px; font-weight: 900; color: var(--accent-yellow); }
+
+        .action-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .btn-action {
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: #fff;
+        }
+
+        .btn-whatsapp { background-color: #25D366; }
+        .btn-pdf { background-color: #dc2626; }
+        .btn-thermal { background-color: #475569; }
+        .btn-map { background-color: #0284c7; }
+        .btn-share { background-color: #8b5cf6; }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--bg-card-blue);
+            color: var(--text-white);
+            border: none;
+            padding: 9px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 12.5px;
+            cursor: pointer;
+        }
+
+        .btn-back { background: none; border: none; color: var(--bg-dark); font-size: 18px; cursor: pointer; }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-around;
+            padding: 6px 0 10px 0;
+            border-top: 1px solid #e2e8f0;
+            z-index: 10;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 9.5px;
+            font-weight: 700;
+            width: 16%;
+            cursor: pointer;
+        }
+
+        .nav-item i { font-size: 15px; }
+        .nav-item.active { color: var(--accent-yellow); }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .stat-box { background: #ffffff; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; }
+        .stat-box h5 { color: #64748b; font-size: 10px; }
+        .stat-box span { color: var(--bg-dark); font-size: 14px; font-weight: 900; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(13, 27, 42, 0.7);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            padding: 14px;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 380px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            color: var(--bg-dark);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 12px; left: 12px;
+            background: #f1f5f9;
+            border: none;
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            font-weight: 800;
+            color: #64748b;
+            cursor: pointer;
+        }
+
+        #invoice-template {
+            display: none;
+            background: #fff;
+            padding: 15px;
+            color: #000;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #thermal-receipt-print, #thermal-receipt-print * { visibility: visible; }
+            #thermal-receipt-print { position: absolute; left: 0; top: 0; width: 80mm; font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <!-- شريط الحالة -->
+        <div class="status-bar">
+            <span id="current-time">09:41</span>
+            <div class="status-icons">
+                <i class="fa-solid fa-signal"></i>
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-battery-full"></i>
+            </div>
+        </div>
+
+        <!-- الهيدر -->
+        <div class="header">
+            <div class="brand-logo">
+                <span>PharmaLogistify</span>
+                <i class="fa-solid fa-network-wired"></i>
+            </div>
+        </div>
+
+        <!-- شريط التنبيه الذكي -->
+        <div class="smart-reminder-bar" id="reminder-bar">
+            <i class="fa-solid fa-bell" style="color:var(--accent-yellow);"></i>
+            <span id="reminder-text">جاري تحميل المواعيد...</span>
+        </div>
+
+        <!-- 1. الرئيسية -->
+        <div id="view-home" class="page-view active">
+            <h2 class="page-header-title" style="justify-content: center;">لوحة التحكم - مندوب الفارما</h2>
+
+            <!-- شريط الهدف والتاركت الشهري -->
+            <div class="target-box">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:11px; font-weight:800; color:var(--bg-card-blue);"><i class="fa-solid fa-bullseye"></i> التاركت المالي الشهري</span>
+                    <span style="font-size:10px; font-weight:800; color:#166534;" id="target-status-text">$0 / $10,000</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="target-progress-fill"></div>
+                </div>
+            </div>
+
+            <div class="cards-list">
+                <div class="card-item card-blue" onclick="switchPage('appointments')">
+                    <div class="card-number">01</div>
+                    <div class="card-details">
+                        <div class="card-title">المواعيد والزيارات</div>
+                        <div class="card-subtext">ربط الخرائط وملاحظات المذاخر</div>
+                    </div>
+                    <div class="card-icon"><i class="fa-regular fa-calendar-check"></i></div>
+                </div>
+
+                <div class="card-item card-yellow" onclick="switchPage('orders')">
+                    <div class="card-number">02</div>
+                    <div class="card-details">
+                        <div class="card-title">الطلبيات والفواتير</div>
+                        <div class="card-subtext">بونص تلقائي، خصومات، وطباعة حرارية</div>
+                    </div>
+                    <div class="card-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                </div>
+
+                <div class="card-item card-blue" onclick="switchPage('returns')">
+                    <div class="card-number">03</div>
+                    <div class="card-details">
+                        <div class="card-title">المرتجعات والتاريخ</div>
+                        <div class="card-subtext">تنبيه انتهاء الصلاحية والاكسباير</div>
+                    </div>
+                    <div class="card-icon"><i class="fa-solid fa-rotate-left"></i></div>
+                </div>
+
+                <div class="card-item card-yellow" onclick="switchPage('accounts')">
+                    <div class="card-number">04</div>
+                    <div class="card-details">
+                        <div class="card-title">الحسابات والديون</div>
+                        <div class="card-subtext">كشوفات الحساب والبحث المباشر</div>
+                    </div>
+                    <div class="card-icon"><i class="fa-solid fa-wallet"></i></div>
+                </div>
+
+                <div class="card-item card-blue" onclick="switchPage('reports')">
+                    <div class="card-number">05</div>
+                    <div class="card-details">
+                        <div class="card-title">التقارير والمشاركة</div>
+                        <div class="card-subtext">مشاركة سريعة + رسم بياني المبيعات</div>
+                    </div>
+                    <div class="card-icon"><i class="fa-solid fa-chart-line"></i></div>
+                </div>
+
+                <div class="card-item card-yellow" onclick="switchPage('settings')">
+                    <div class="card-number">06</div>
+                    <div class="card-details">
+                        <div class="card-title">الإعدادات والتاركت</div>
+                        <div class="card-subtext">تعديل الهدف النسخ والملفات</div>
+                    </div>
+                    <div class="card-icon"><i class="fa-solid fa-gear"></i></div>
+                </div>
+            </div>
+
+            <h3 class="section-title">أحدث الأنشطة والمواعيد</h3>
+            <div id="home-activity-list"></div>
+        </div>
+
+        <!-- 2. المواعيد -->
+        <div id="view-appointments" class="page-view">
+            <div class="page-header-title">
+                <button class="btn-back" onclick="switchPage('home')"><i class="fa-solid fa-arrow-right"></i></button>
+                <span>تحديد موعد أو زيارة ميدانية</span>
+                <div></div>
+            </div>
+
+            <form class="form-box" onsubmit="addAppointment(event)">
+                <div class="form-group">
+                    <label>المحافظة (الثابتة)</label>
+                    <input type="text" id="app-gov-display" class="form-control" readonly style="background:#e2e8f0; font-weight:800;">
+                </div>
+                <div class="form-group">
+                    <label>اختر المذخر المرتبط</label>
+                    <select id="app-store" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>نوع المهمة / الموعد</label>
+                    <select id="app-type" class="form-control" required>
+                        <option value="زيارة ميدانية">زيارة ميدانية للمذخر</option>
+                        <option value="استحصال مبالغ">استحصال وقبض مبالغ (ديون)</option>
+                        <option value="قوائم تحت التدقيق">مراجعة قوائم تحت التدقيق</option>
+                        <option value="مطابقة حسابات">مطابقة وتصفية حسابات</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>تاريخ وتوقيت الموعد المحدد</label>
+                    <input type="datetime-local" id="app-date-picker" class="form-control" required style="font-weight:700;">
+                </div>
+                <button type="submit" class="btn-submit"><i class="fa-solid fa-calendar-plus"></i> حفظ وترحيل لتقرير المدير</button>
+            </form>
+
+            <h3 class="section-title">المواعيد مع الخريطة وملاحظات المذخر</h3>
+            <div id="appointments-list"></div>
+        </div>
+
+        <!-- 3. الطلبيات -->
+        <div id="view-orders" class="page-view">
+            <div class="page-header-title">
+                <button class="btn-back" onclick="switchPage('home')"><i class="fa-solid fa-arrow-right"></i></button>
+                <span>تثبيت فاتورة طلبية</span>
+                <div></div>
+            </div>
+
+            <!-- محرك البحث السريع -->
+            <div class="form-group">
+                <input type="text" id="search-orders-input" placeholder="🔍 بحث في الفواتير باسم المذخر..." class="form-control" oninput="renderOrders()">
+            </div>
+
+            <div class="form-box">
+                <div class="form-group">
+                    <label>المحافظة الثابتة</label>
+                    <input type="text" id="ord-gov-display" class="form-control" readonly style="background:#e2e8f0; font-weight:800;">
+                </div>
+                <div class="form-group">
+                    <label>اختر المذخر المستلم</label>
+                    <select id="ord-store" class="form-control" required></select>
+                </div>
+
+                <hr style="margin: 8px 0; border:0; border-top:1px solid #e2e8f0;">
+
+                <label style="font-size:11.5px; font-weight:800; color:var(--bg-card-blue); margin-bottom:6px; display:block;">
+                    <i class="fa-solid fa-file-invoice"></i> مواد الفاتورة والتخفيضات (بونص آلي كل 10+1)
+                </label>
+                
+                <div id="products-container"></div>
+
+                <button type="button" class="btn-add-item" onclick="addProductRow()">
+                    <i class="fa-solid fa-plus"></i> إضافة مادة أخرى للفاتورة
+                </button>
+
+                <div class="form-group" style="background:#f1f5f9; padding:8px; border-radius:8px;">
+                    <label style="font-size:10.5px; font-weight:800;">نسبة خصم إضافية للفاتورة (%)</label>
+                    <input type="number" id="order-discount-percent" class="form-control" value="0" min="0" max="100" oninput="calculateOrderTotal()">
+                </div>
+
+                <div style="margin-top:8px;">
+                    <label style="font-size:10.5px; font-weight:800; color:#475569;">معاينة جدول الفاتورة:</label>
+                    <table class="invoice-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>اسم المادة</th>
+                                <th>العدد/بونص</th>
+                                <th>السعر</th>
+                                <th>الإجمالي</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoice-preview-rows"></tbody>
+                    </table>
+                </div>
+
+                <div class="total-box">
+                    <label style="font-size:12px; font-weight:700;">المجموع النهائي للفاتورة:</label>
+                    <span id="order-total-price">$0.00</span>
+                </div>
+
+                <div class="action-btns">
+                    <button type="button" class="btn-action btn-whatsapp" onclick="sendToWhatsApp()">
+                        <i class="fa-brands fa-whatsapp"></i> إرسال واتساب
+                    </button>
+                    <button type="button" class="btn-action btn-pdf" onclick="generatePDF()">
+                        <i class="fa-solid fa-file-pdf"></i> تصدير PDF
+                    </button>
+                </div>
+            </div>
+
+            <h3 class="section-title">سجل الفواتير المسجلة</h3>
+            <div id="orders-list"></div>
+        </div>
+
+        <!-- 4. المرتجعات مع تاريخ الصلاحية والتنبيه المبكر -->
+        <div id="view-returns" class="page-view">
+            <div class="page-header-title">
+                <button class="btn-back" onclick="switchPage('home')"><i class="fa-solid fa-arrow-right"></i></button>
+                <span>إدارة المرتجعات وتاريخ الصلاحية</span>
+                <div></div>
+            </div>
+
+            <form class="form-box" onsubmit="addReturnItem(event)">
+                <div class="form-group">
+                    <label>اختر المذخر الراجع منه</label>
+                    <select id="ret-store" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>اختر المادة المرتجعة</label>
+                    <select id="ret-product" class="form-control" onchange="calculateReturnSubtotal()" required></select>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>الكمية المرتجعة</label>
+                        <input type="number" id="ret-qty" class="form-control" value="1" min="1" oninput="calculateReturnSubtotal()" required>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>قيمة الراجع</label>
+                        <input type="text" id="ret-subtotal" class="form-control" readonly style="background:#e2e8f0; font-weight:800;" value="$0.00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>تاريخ انتهاء الصلاحية للمادة (Expire Date)</label>
+                    <input type="date" id="ret-expiry-date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>سبب الإرجاع</label>
+                    <select id="ret-reason" class="form-control" required>
+                        <option value="قريب انتهاء الصلاحية">قريب انتهاء الصلاحية (اكسباير)</option>
+                        <option value="تالف / كارتون متضرر">تالف / متضرر</option>
+                        <option value="فائض عن الحاجة">فائض عن حاجة المذخر</option>
+                        <option value="خطأ في الطلبية">خطأ في التجهيز</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit" style="background-color: #c2410c;"><i class="fa-solid fa-rotate-left"></i> تسجيل المرتجع</button>
+            </form>
+
+            <h3 class="section-title">سجل المرتجعات مع تنبيهات الاكسباير</h3>
+            <div id="returns-list"></div>
+        </div>
+
+        <!-- 5. الحسابات والبحث المباشر -->
+        <div id="view-accounts" class="page-view">
+            <div class="page-header-title">
+                <button class="btn-back" onclick="switchPage('home')"><i class="fa-solid fa-arrow-right"></i></button>
+                <span>كشوفات الحساب المرفوعة</span>
+                <div></div>
+            </div>
+
+            <div class="form-group">
+                <input type="text" id="search-accounts-input" placeholder="🔍 بحث في كشف الحساب باسم المذخر..." class="form-control" oninput="renderAccounts()">
+            </div>
+
+            <div class="form-box" style="border: 2px dashed var(--bg-card-blue);">
+                <label style="font-size:11.5px; font-weight:800; color:var(--bg-dark); display:block; margin-bottom:4px;">
+                    <i class="fa-solid fa-file-excel" style="color:#166534; font-size:15px;"></i> رفع ملف إكسل كشف حساب المذاخر التفصيلي
+                </label>
+                <input type="file" accept=".xlsx, .xls, .csv" onchange="importAccountExcel(event)" class="form-control" style="padding:4px;">
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <h5>إجمالي الديون</h5>
+                    <span style="color: #c62828;" id="total-debts">$0</span>
+                </div>
+                <div class="stat-box">
+                    <h5>إجمالي المقبوضات</h5>
+                    <span style="color: #166534;" id="total-paid">$0</span>
+                </div>
+            </div>
+
+            <h3 class="section-title">تفاصيل حسابات المذاخر</h3>
+            <div id="accounts-list"></div>
+        </div>
+
+        <!-- 6. التقارير والمشاركة السريعة -->
+        <div id="view-reports" class="page-view">
+            <div class="page-header-title">
+                <button class="btn-back" onclick="switchPage('home')"><i class="fa-solid fa-arrow-right"></i></button>
+                <span>التقارير والمشاركة السريعة</span>
+                <div></div>
+            </div>
+
+            <div class="form-box" style="text-align:center;">
+                <h4 style="font-size:12px; font-weight:800; color:var(--bg-card-blue); margin-bottom:8px;">
+                    <i class="fa-solid fa-chart-pie"></i> التحليل المالي والبياني للمبيعات
+                </h4>
+                <div style="height: 170px; position: relative;">
+                    <canvas id="analyticsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="form-box">
+                <h4 style="font-size:12.5px; font-weight:800; color:var(--bg-card-blue); margin-bottom:8px; text-align:center;">
+                    <i class="fa-solid fa-calendar-check"></i> جدول خطة العمل المرفوع للمدير
+                </h4>
+
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th style="width:8%;">ت</th>
+                            <th>المذخر</th>
+                            <th>المهمة</th>
+                            <th style="width:32%;">الموعد والوقت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weekly-report-table-body"></tbody>
+                </table>
+
+                <div class="action-btns" style="margin-top:12px; grid-template-columns: 1fr 1fr 1fr;">
+                    <button type="button" class="btn-action btn-whatsapp" onclick="sendWeeklyScheduleToManager()">
+                        <i class="fa-brands fa-whatsapp"></i> واتساب
+                    </button>
+                    <button type="button" class="btn-action btn-pdf" onclick="exportWeeklySchedulePDF()">
+                        <i class="fa-solid fa-file-pdf"></i> PDF
+                    </button>
+                    <button type="button" class="btn-action btn-share" onclick="shareNativeReport()">
+                        <i class="fa-solid fa-share-nodes"></i> مشاركة
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. الإعدادات والتاركت المالي -->
+        <div id="view-settings" class="page-view">
+            <div class="page-header-title">
+                <button class="btn-back" onclick="switchPage('home')"><i class="fa-solid fa-arrow-right"></i></button>
+                <span>الإعدادات والتاركت والنسخ</span>
+                <div></div>
+            </div>
+
+            <!-- تعديل التاركت الشهري -->
+            <div class="form-box" style="border: 2px solid var(--accent-yellow);">
+                <h4 style="font-size:11.5px; font-weight:800; color:var(--bg-dark); margin-bottom:6px;"><i class="fa-solid fa-bullseye"></i> تحديد التاركت المالي الشهري ($)</h4>
+                <div class="form-group">
+                    <input type="number" id="monthly-target-input" class="form-control" value="10000" min="1000" onchange="saveMonthlyTarget()">
+                </div>
+            </div>
+
+            <div class="form-box" style="border: 2px solid var(--bg-card-blue);">
+                <h4 style="font-size:11.5px; font-weight:800; color:var(--bg-card-blue); margin-bottom:6px;"><i class="fa-solid fa-location-dot"></i> المحافظة الخاصة بالمندوب</h4>
+                <div class="form-group">
+                    <select id="rep-governorate" class="form-control" onchange="saveRepresentativeGovernorate()">
+                        <option value="النجف الأشرف">النجف الأشرف</option>
+                        <option value="كربلاء المقدسة">كربلاء المقدسة</option>
+                        <option value="بابل">بابل</option>
+                        <option value="الديوانية">الديوانية</option>
+                        <option value="بغداد">بغداد</option>
+                        <option value="البصرة">البصرة</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-box" style="border: 2px solid #0284c7;">
+                <h4 style="font-size:11.5px; font-weight:800; color:#0284c7; margin-bottom:6px;"><i class="fa-solid fa-database"></i> النسخ الاحتياطي والاسترجاع</h4>
+                <div style="display:flex; gap:6px;">
+                    <button onclick="exportBackupJSON()" class="btn-submit" style="background:#0284c7; font-size:11px; padding:7px;">
+                        <i class="fa-solid fa-download"></i> تصدير نسخة
+                    </button>
+                    <button onclick="document.getElementById('import-backup-file').click()" class="btn-submit" style="background:#166534; font-size:11px; padding:7px;">
+                        <i class="fa-solid fa-upload"></i> استرجاع
+                    </button>
+                    <input type="file" id="import-backup-file" accept=".json" style="display:none;" onchange="importBackupJSON(event)">
+                </div>
+            </div>
+
+            <div class="form-box" style="border: 2px dashed var(--accent-yellow);">
+                <label style="font-size:11.5px; font-weight:800; color:var(--bg-dark); display:block; margin-bottom:4px;">
+                    <i class="fa-solid fa-file-excel" style="color:#166534; font-size:15px;"></i> رفع إكسل مواد الشركة
+                </label>
+                <input type="file" accept=".xlsx, .xls, .csv" onchange="importProductsExcel(event)" class="form-control" style="padding:4px;">
+            </div>
+
+            <form class="form-box" onsubmit="addNewStore(event)">
+                <h4 style="font-size:11.5px; font-weight:800; color:var(--bg-dark); margin-bottom:6px;">إضافة مذخر جديد وملاحظاته</h4>
+                <div class="form-group">
+                    <input type="text" id="new-store-name" class="form-control" placeholder="أدخل اسم المذخر الجديد" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="new-store-notes" class="form-control" placeholder="ملاحظات المذخر (مثلاً: تواجد صباحاً)">
+                </div>
+                <button type="submit" class="btn-submit"><i class="fa-solid fa-plus"></i> حفظ المذخر في القائمة</button>
+            </form>
+
+            <button onclick="clearData()" style="width:100%; background:#fee2e2; color:#dc2626; border:none; padding:9px; border-radius:8px; font-weight:800; cursor:pointer; font-size:11.5px;">
+                <i class="fa-solid fa-trash"></i> إعادة ضبط كافة البيانات
+            </button>
+        </div>
+
+        <!-- شريط التنقل السفلي -->
+        <div class="bottom-nav">
+            <div class="nav-item active" id="nav-home" onclick="switchPage('home')">
+                <i class="fa-solid fa-house"></i>
+                <span>الرئيسية</span>
+            </div>
+            <div class="nav-item" id="nav-orders" onclick="switchPage('orders')">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span>الطلبيات</span>
+            </div>
+            <div class="nav-item" id="nav-returns" onclick="switchPage('returns')">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>المرتجعات</span>
+            </div>
+            <div class="nav-item" id="nav-accounts" onclick="switchPage('accounts')">
+                <i class="fa-solid fa-wallet"></i>
+                <span>الحسابات</span>
+            </div>
+            <div class="nav-item" id="nav-reports" onclick="switchPage('reports')">
+                <i class="fa-solid fa-chart-column"></i>
+                <span>التقارير</span>
+            </div>
+            <div class="nav-item" id="nav-settings" onclick="switchPage('settings')">
+                <i class="fa-solid fa-gear"></i>
+                <span>الإعدادات</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تفاصيل الفاتورة (Modal) -->
+    <div id="details-modal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <h3 id="modal-title" style="font-size:14px; font-weight:800; color:var(--bg-card-blue); margin-bottom:4px;">تفاصيل الفاتورة</h3>
+            <p id="modal-subtitle" style="font-size:10.5px; color:#64748b; margin-bottom:10px;"></p>
+            <div id="modal-content"></div>
+            
+            <div class="action-btns" style="margin-top:12px; grid-template-columns: 1fr 1fr 1fr;">
+                <button type="button" id="modal-btn-wa" class="btn-action btn-whatsapp"><i class="fa-brands fa-whatsapp"></i> واتساب</button>
+                <button type="button" id="modal-btn-pdf" class="btn-action btn-pdf"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                <button type="button" id="modal-btn-thermal" class="btn-action btn-thermal" onclick="printThermalReceipt()"><i class="fa-solid fa-print"></i> حراري</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- قالب PDF المخفي -->
+    <div id="invoice-template">
+        <h2 id="pdf-doc-title" style="text-align:center; color:#1b2a4a; margin-bottom:5px;">فاتورة طلبية مواد أدوية</h2>
+        <p style="text-align:center; font-size:12px; color:#555; margin-bottom:12px;">PharmaLogistify System | التاريخ: <span id="pdf-date"></span></p>
+        <hr style="margin-bottom:12px;">
+        <p><b>المحافظة:</b> <span id="pdf-gov"></span></p>
+        <p><b>الجهة / المذخر:</b> <span id="pdf-store"></span></p>
+        <br>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:12px;" border="1" cellpadding="5">
+            <thead>
+                <tr style="background:#1b2a4a; color:#fff;">
+                    <th>ت</th>
+                    <th>اسم المادة / المذخر</th>
+                    <th>التفاصيل / المهمة</th>
+                    <th>الكمية / التوقيت</th>
+                    <th>الإجمالي</th>
+                </tr>
+            </thead>
+            <tbody id="pdf-table-body"></tbody>
+        </table>
+        <h3 style="text-align:left; color:#1b2a4a;">المجموع الكلي: <span id="pdf-total"></span></h3>
+    </div>
+
+    <!-- قالب طباعة الإيصال الحراري -->
+    <div id="thermal-receipt-print" style="display:none; font-family:'Cairo', sans-serif;">
+        <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:5px; margin-bottom:5px;">
+            <h3 style="font-size:14px; margin:0;">PharmaLogistify</h3>
+            <p style="font-size:10px; margin:2px 0;" id="th-title">إيصال طلبية مبيعات</p>
+            <p style="font-size:9px; margin:0;" id="th-date"></p>
+        </div>
+        <div style="font-size:10px; margin-bottom:5px;">
+            <p><b>المذخر:</b> <span id="th-store"></span></p>
+            <p><b>المحافظة:</b> <span id="th-gov"></span></p>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:9.5px; border-bottom:1px dashed #000; margin-bottom:5px;">
+            <thead>
+                <tr style="border-bottom:1px solid #000; text-align:right;">
+                    <th>المادة</th>
+                    <th>عدد</th>
+                    <th>سعر</th>
+                    <th>جملة</th>
+                </tr>
+            </thead>
+            <tbody id="th-table-body"></tbody>
+        </table>
+        <div style="text-align:left; font-size:11px; font-weight:bold;">
+            المجموع: <span id="th-total"></span>
+        </div>
+        <p style="text-align:center; font-size:8px; margin-top:10px;">شكراً لتعاملكم معنا</p>
+    </div>
+
+    <script>
+        let currentGovernorate = localStorage.getItem('pharma_rep_gov') || 'النجف الأشرف';
+        let monthlyTarget = parseFloat(localStorage.getItem('pharma_target')) || 10000;
+
+        let stores = JSON.parse(localStorage.getItem('pharma_stores')) || [
+            { gov: 'النجف الأشرف', name: 'مذخر النجف المركزي', notes: 'تواجد صباحاً من 9 إلى 12' },
+            { gov: 'النجف الأشرف', name: 'مذخر أدوية الحيدرية', notes: 'طلب الاستحصال يوم الخميس' },
+            { gov: 'كربلاء المقدسة', name: 'مذخر كربلاء التخصصي', notes: 'التواجد مساءً فقط' }
+        ];
+
+        let products = JSON.parse(localStorage.getItem('pharma_products')) || [
+            { name: 'باكليتاكسيل سيروم 100 مل', price: 25 },
+            { name: 'سيتامول أقراص 500 ملغم', price: 5 },
+            { name: 'فيتامين سي مع زنك', price: 12 },
+            { name: 'أمبوكسيلين كبسول 500', price: 8 }
+        ];
+
+        let appointments = JSON.parse(localStorage.getItem('pharma_appts')) || [];
+        let orders = JSON.parse(localStorage.getItem('pharma_orders')) || [];
+        let returnsList = JSON.parse(localStorage.getItem('pharma_returns')) || [];
+
+        let accountStatements = JSON.parse(localStorage.getItem('pharma_accounts')) || [
+            { store: 'مذخر النجف المركزي', gov: 'النجف الأشرف', ref: 'فاتورة #1042', paid: 1500, debt: 450, status: 'تحت التدقيق' }
+        ];
+
+        let activeModalData = null;
+        let chartInstance = null;
+
+        function initApp() {
+            document.getElementById('rep-governorate').value = currentGovernorate;
+            document.getElementById('app-gov-display').value = currentGovernorate;
+            document.getElementById('ord-gov-display').value = currentGovernorate;
+            document.getElementById('monthly-target-input').value = monthlyTarget;
+
+            updateStoreDropdowns();
+            renderReturnProductsDropdown();
+            updateSmartReminder();
+            updateTargetProgressBar();
+        }
+
+        /* 1. حساب التاركت والتقدم */
+        function saveMonthlyTarget() {
+            monthlyTarget = parseFloat(document.getElementById('monthly-target-input').value) || 10000;
+            localStorage.setItem('pharma_target', monthlyTarget);
+            updateTargetProgressBar();
+        }
+
+        function updateTargetProgressBar() {
+            const govOrders = orders.filter(o => o.gov === currentGovernorate);
+            const totalSalesSum = govOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+            
+            const percentage = Math.min(100, Math.round((totalSalesSum / monthlyTarget) * 100));
+            document.getElementById('target-progress-fill').style.width = percentage + '%';
+            document.getElementById('target-status-text').textContent = `$${totalSalesSum.toFixed(0)} / $${monthlyTarget} (${percentage}%)`;
+        }
+
+        function updateSmartReminder() {
+            const govAppts = appointments.filter(a => a.gov === currentGovernorate);
+            const reminderText = document.getElementById('reminder-text');
+            if (govAppts.length > 0) {
+                reminderText.textContent = `الموعد القادم: ${govAppts[0].store} (${govAppts[0].type}) - ${govAppts[0].time}`;
+            } else {
+                reminderText.textContent = `لا توجد مواعيد معلقة اليوم في ${currentGovernorate}`;
+            }
+        }
+
+        function saveRepresentativeGovernorate() {
+            currentGovernorate = document.getElementById('rep-governorate').value;
+            localStorage.setItem('pharma_rep_gov', currentGovernorate);
+            initApp();
+            alert(`تم حفظ المحافظة الثابتة (${currentGovernorate}) بنجاح!`);
+        }
+
+        function updateStoreDropdowns() {
+            const filteredStores = stores.filter(s => s.gov === currentGovernorate);
+            const optionsHtml = filteredStores.length > 0 ? 
+                filteredStores.map(s => `<option value="${s.name}">${s.name}</option>`).join('') :
+                '<option value="">لا توجد مذاخر مسجلة بهذه المحافظة</option>';
+
+            document.getElementById('app-store').innerHTML = optionsHtml;
+            document.getElementById('ord-store').innerHTML = optionsHtml;
+            document.getElementById('ret-store').innerHTML = optionsHtml;
+        }
+
+        function openStoreOnMap(storeName) {
+            const query = encodeURIComponent(`${storeName} ${currentGovernorate}`);
+            window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+        }
+
+        function renderReturnProductsDropdown() {
+            const select = document.getElementById('ret-product');
+            let html = '<option value="">-- اختر المادة المرتجعة --</option>';
+            products.forEach(p => {
+                html += `<option value="${p.name}" data-price="${p.price}">${p.name} ($${p.price})</option>`;
+            });
+            select.innerHTML = html;
+        }
+
+        function calculateReturnSubtotal() {
+            const select = document.getElementById('ret-product');
+            const qty = parseInt(document.getElementById('ret-qty').value) || 0;
+            const selectedOption = select.options[select.selectedIndex];
+            const price = selectedOption ? parseFloat(selectedOption.getAttribute('data-price') || 0) : 0;
+
+            const total = price * qty;
+            document.getElementById('ret-subtotal').value = '$' + total.toFixed(2);
+            return total;
+        }
+
+        function addReturnItem(e) {
+            e.preventDefault();
+            const store = document.getElementById('ret-store').value;
+            const select = document.getElementById('ret-product');
+            const productName = select.value;
+            const qty = parseInt(document.getElementById('ret-qty').value) || 0;
+            const reason = document.getElementById('ret-reason').value;
+            const expiryDate = document.getElementById('ret-expiry-date').value;
+            const selectedOption = select.options[select.selectedIndex];
+            const price = selectedOption ? parseFloat(selectedOption.getAttribute('data-price') || 0) : 0;
+            const subtotal = calculateReturnSubtotal();
+
+            if(!store || !productName || !expiryDate) {
+                alert('يرجى اختيار المذخر والمادة وتاريخ الاكسباير بشكل صحيح');
+                return;
+            }
+
+            const newReturn = {
+                id: 'ret-' + Date.now(),
+                isReturn: true,
+                gov: currentGovernorate,
+                store,
+                items: [{ name: productName, price, qty, subtotal }],
+                total: subtotal,
+                reason,
+                expiryDate,
+                date: new Date().toLocaleDateString('ar-IQ')
+            };
+
+            returnsList.unshift(newReturn);
+            localStorage.setItem('pharma_returns', JSON.stringify(returnsList));
+            renderReturns();
+            alert('تم تسجيل المرتجع بنجاح!');
+        }
+
+        function renderReturns() {
+            const filtered = returnsList.filter(r => r.gov === currentGovernorate);
+            const today = new Date();
+
+            document.getElementById('returns-list').innerHTML = filtered.map((r, idx) => {
+                let expBadge = '';
+                if(r.expiryDate) {
+                    const exp = new Date(r.expiryDate);
+                    const diffMonths = (exp - today) / (1000 * 60 * 60 * 24 * 30);
+                    if(diffMonths <= 6) expBadge = `<span class="badge badge-red" style="margin-right:4px;">⚠️ اكسباير قريب (${r.expiryDate})</span>`;
+                    else expBadge = `<span class="badge badge-green" style="margin-right:4px;">انتهاء: ${r.expiryDate}</span>`;
+                }
+
+                return `
+                    <div class="item-card" onclick="openDetailsModal('return', ${idx})">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color:var(--bg-dark); font-size:12.5px; font-weight:800;">${r.store}</h4>
+                            <span class="badge badge-orange">$${r.total ? r.total.toFixed(2) : '0'}</span>
+                        </div>
+                        <p style="font-size:10.5px; color:#475569; margin-top:2px;">المادة: <b>${r.items[0].name}</b> (عدد: ${r.items[0].qty})</p>
+                        <div style="margin-top:4px;">${expBadge} <span style="font-size:9.5px; color:#c2410c;">السبب: ${r.reason}</span></div>
+                    </div>
+                `;
+            }).join('') || '<p style="font-size:11px; color:#64748b;">لا توجد مرتجعات مسجلة</p>';
+        }
+
+        function addNewStore(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-store-name').value;
+            const notes = document.getElementById('new-store-notes').value || 'لا توجد ملاحظات';
+            if(!name) return;
+
+            stores.push({ gov: currentGovernorate, name, notes });
+            localStorage.setItem('pharma_stores', JSON.stringify(stores));
+            updateStoreDropdowns();
+            document.getElementById('new-store-name').value = '';
+            document.getElementById('new-store-notes').value = '';
+            alert(`تمت إضافة مذخر (${name}) بنجاح!`);
+        }
+
+        function importProductsExcel(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+                products = json.map(row => ({
+                    name: row['اسم المادة'] || row['المادة'] || row['Item'] || Object.values(row)[0],
+                    price: parseFloat(row['السعر'] || row['Price'] || row['سعر'] || 0)
+                })).filter(p => p.name);
+
+                localStorage.setItem('pharma_products', JSON.stringify(products));
+                document.getElementById('products-container').innerHTML = '';
+                addProductRow();
+                renderReturnProductsDropdown();
+                alert(`تم تحديث ${products.length} مادة من إكسل مواد الشركة!`);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function importAccountExcel(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+                accountStatements = json.map(row => ({
+                    store: row['اسم المذخر'] || row['المذخر'] || Object.values(row)[0],
+                    gov: row['المحافظة'] || currentGovernorate,
+                    ref: row['البيان'] || row['المرجع'] || row['رقم القائمة'] || 'كشف حساب',
+                    paid: parseFloat(row['المسدد'] || row['المقبوضات'] || 0),
+                    debt: parseFloat(row['المتبقي'] || row['الديون'] || 0),
+                    status: row['الحالة'] || (parseFloat(row['المتبقي'] || 0) > 0 ? 'عليه دين' : 'مستوفي')
+                }));
+
+                localStorage.setItem('pharma_accounts', JSON.stringify(accountStatements));
+                renderAccounts();
+                alert('تم استيراد كشف الحساب بنجاح!');
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        /* 2. احتساب البونص التلقائي (10 + 1 مجاناً) */
+        function autoCalculateBonus(rowId) {
+            const row = document.getElementById(rowId);
+            const qty = parseInt(row.querySelector('.prod-qty').value) || 0;
+            const bonusInput = row.querySelector('.prod-bonus');
+            
+            // قاعدة بونص تلقائي: كل 10 قطع تحصل على 1 مجاناً
+            const autoBonus = Math.floor(qty / 10);
+            bonusInput.value = autoBonus;
+
+            calculateOrderTotal();
+        }
+
+        function addProductRow() {
+            const container = document.getElementById('products-container');
+            const rowId = 'prod-row-' + Date.now();
+
+            const row = document.createElement('div');
+            row.className = 'product-row';
+            row.id = rowId;
+
+            let optionsHtml = '<option value="">-- اختر المادة من القائمة --</option>';
+            products.forEach(p => {
+                optionsHtml += `<option value="${p.name}" data-price="${p.price}">${p.name} ($${p.price})</option>`;
+            });
+
+            row.innerHTML = `
+                <div class="form-group" style="margin-bottom:4px;">
+                    <select class="form-control prod-select" onchange="calculateOrderTotal()" required>
+                        ${optionsHtml}
+                    </select>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 30px; gap:4px; align-items:center;">
+                    <div>
+                        <label style="font-size:9px;">العدد</label>
+                        <input type="number" class="form-control prod-qty" value="1" min="1" oninput="autoCalculateBonus('${rowId}')" required>
+                    </div>
+                    <div>
+                        <label style="font-size:9px; color:#166534;">بونص آلي</label>
+                        <input type="number" class="form-control prod-bonus" value="0" min="0" oninput="calculateOrderTotal()">
+                    </div>
+                    <div>
+                        <label style="font-size:9px;">المجموع</label>
+                        <input type="text" class="form-control prod-subtotal" value="$0.00" readonly style="background:#e2e8f0; font-weight:800;">
+                    </div>
+                    <button type="button" onclick="removeProductRow('${rowId}')" style="background:#fee2e2; color:#dc2626; border:none; padding:6px; border-radius:6px; margin-top:10px; cursor:pointer;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(row);
+            calculateOrderTotal();
+        }
+
+        function removeProductRow(rowId) {
+            if(document.querySelectorAll('.product-row').length > 1) {
+                document.getElementById(rowId).remove();
+                calculateOrderTotal();
+            } else {
+                alert('يجب أن تحتوي الفاتورة على مادة واحدة على الأقل');
+            }
+        }
+
+        function calculateOrderTotal() {
+            let grandTotal = 0;
+            const previewTbody = document.getElementById('invoice-preview-rows');
+            previewTbody.innerHTML = '';
+
+            let index = 1;
+            document.querySelectorAll('.product-row').forEach(row => {
+                const select = row.querySelector('.prod-select');
+                const qtyInput = row.querySelector('.prod-qty');
+                const bonusInput = row.querySelector('.prod-bonus');
+                const subtotalInput = row.querySelector('.prod-subtotal');
+
+                const selectedOption = select.options[select.selectedIndex];
+                const productName = select.value || 'لم تحدد مادة';
+                const price = selectedOption ? parseFloat(selectedOption.getAttribute('data-price') || 0) : 0;
+                const qty = parseInt(qtyInput.value) || 0;
+                const bonus = parseInt(bonusInput.value) || 0;
+
+                const subtotal = price * qty;
+                subtotalInput.value = '$' + subtotal.toFixed(2);
+                grandTotal += subtotal;
+
+                if(select.value) {
+                    previewTbody.innerHTML += `
+                        <tr>
+                            <td><b>${index++}</b></td>
+                            <td>${productName}</td>
+                            <td>${qty} ${bonus > 0 ? `<span style="color:#166534;">(+${bonus})</span>` : ''}</td>
+                            <td>$${price}</td>
+                            <td style="color:var(--bg-card-blue); font-weight:800;">$${subtotal.toFixed(2)}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            const discountPercent = parseFloat(document.getElementById('order-discount-percent').value) || 0;
+            if (discountPercent > 0) {
+                grandTotal = grandTotal - (grandTotal * (discountPercent / 100));
+            }
+
+            if(previewTbody.innerHTML === '') {
+                previewTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#94a3b8;">اختر المواد لعرض الفاتورة المتسلسلة</td></tr>';
+            }
+
+            document.getElementById('order-total-price').textContent = '$' + grandTotal.toFixed(2);
+            return grandTotal;
+        }
+
+        function getOrderData() {
+            const store = document.getElementById('ord-store').value;
+            if(!store) {
+                alert('يرجى اختيار المذخر أولاً');
+                return null;
+            }
+
+            const items = [];
+            document.querySelectorAll('.product-row').forEach(row => {
+                const select = row.querySelector('.prod-select');
+                const qty = parseInt(row.querySelector('.prod-qty').value) || 0;
+                const bonus = parseInt(row.querySelector('.prod-bonus').value) || 0;
+                const selectedOption = select.options[select.selectedIndex];
+                const price = selectedOption ? parseFloat(selectedOption.getAttribute('data-price') || 0) : 0;
+
+                if(select.value) {
+                    items.push({ name: select.value, price, qty, bonus, subtotal: price * qty });
+                }
+            });
+
+            if(items.length === 0) {
+                alert('يرجى اختيار مادة واحدة على الأقل');
+                return null;
+            }
+
+            const total = calculateOrderTotal();
+            const discountPercent = parseFloat(document.getElementById('order-discount-percent').value) || 0;
+
+            return {
+                id: 'ord-' + Date.now(),
+                isReturn: false,
+                gov: currentGovernorate,
+                store,
+                items,
+                discountPercent,
+                total,
+                date: new Date().toLocaleDateString('ar-IQ')
+            };
+        }
+
+        function sendToWhatsApp(dataObj) {
+            const data = dataObj || getOrderData();
+            if(!data) return;
+
+            const isRet = data.isReturn;
+            let msg = isRet ? `📦 *وصل ارتجاع مواد/أدوية*\n` : `🧾 *فاتورة طلبية أدوية متسلسلة*\n`;
+            msg += `---------------------------------\n`;
+            msg += `🏛 *المحافظة:* ${data.gov}\n`;
+            msg += `🏢 *المذخر:* ${data.store}\n`;
+            msg += `📅 *التاريخ:* ${data.date}\n`;
+            if(isRet && data.reason) msg += `⚠️ *سبب الإرجاع:* ${data.reason}\n`;
+            if(!isRet && data.discountPercent > 0) msg += `🏷️ *نسبة الخصم:* ${data.discountPercent}%\n`;
+            msg += `---------------------------------\n`;
+            msg += `📋 *قائمة المواد:*\n\n`;
+
+            data.items.forEach((item, index) => {
+                msg += `*${index + 1}. ${item.name}*\n`;
+                msg += `   • العدد: ${item.qty} ${item.bonus ? `(+${item.bonus} بونص)` : ''} | السعر: $${item.price} | الإجمالي: $${item.subtotal.toFixed(2)}\n`;
+            });
+
+            msg += `---------------------------------\n`;
+            msg += `💰 *المجموع الكلي:* *$${data.total.toFixed(2)}*\n`;
+
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+
+            if(!dataObj) {
+                orders.unshift(data);
+                localStorage.setItem('pharma_orders', JSON.stringify(orders));
+                renderOrders();
+                updateTargetProgressBar();
+            }
+        }
+
+        function generatePDF(dataObj) {
+            const data = dataObj || getOrderData();
+            if(!data) return;
+
+            document.getElementById('pdf-doc-title').textContent = data.isReturn ? 'كشف راجع مواد أدوية' : 'فاتورة طلبية مواد أدوية';
+            document.getElementById('pdf-date').textContent = data.date;
+            document.getElementById('pdf-gov').textContent = data.gov;
+            document.getElementById('pdf-store').textContent = data.store;
+            document.getElementById('pdf-total').textContent = '$' + data.total.toFixed(2);
+
+            document.getElementById('pdf-table-body').innerHTML = data.items.map((item, idx) => `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>${item.name} ${item.bonus ? `(+${item.bonus} بونص)` : ''}</td>
+                    <td>$${item.price}</td>
+                    <td>${item.qty}</td>
+                    <td>$${item.subtotal.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            const element = document.getElementById('invoice-template');
+            element.style.display = 'block';
+
+            html2pdf().set({
+                margin: 0.5,
+                filename: `${data.isReturn ? 'مرتجع' : 'فاتورة'}_${data.store}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            }).from(element).save().then(() => {
+                element.style.display = 'none';
+            });
+
+            if(!dataObj) {
+                orders.unshift(data);
+                localStorage.setItem('pharma_orders', JSON.stringify(orders));
+                renderOrders();
+                updateTargetProgressBar();
+            }
+        }
+
+        function printThermalReceipt() {
+            if(!activeModalData) return;
+            const data = activeModalData;
+
+            document.getElementById('th-title').textContent = data.isReturn ? 'إيصال مرتجع مواد' : 'إيصال طلبية مبيعات';
+            document.getElementById('th-date').textContent = data.date;
+            document.getElementById('th-store').textContent = data.store;
+            document.getElementById('th-gov').textContent = data.gov;
+            document.getElementById('th-total').textContent = '$' + data.total.toFixed(2);
+
+            document.getElementById('th-table-body').innerHTML = data.items.map(i => `
+                <tr>
+                    <td>${i.name}</td>
+                    <td>${i.qty}</td>
+                    <td>$${i.price}</td>
+                    <td>$${i.subtotal.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            const thermalDiv = document.getElementById('thermal-receipt-print');
+            thermalDiv.style.display = 'block';
+            window.print();
+            thermalDiv.style.display = 'none';
+        }
+
+        /* 3. مشاركة سريعة Web Share API */
+        function shareNativeReport() {
+            const govAppts = appointments.filter(a => a.gov === currentGovernorate);
+            let shareText = `📅 *تقرير المواعيد لـ ${currentGovernorate}*\nعدد المواعيد: ${govAppts.length}\n`;
+            govAppts.forEach((a, i) => { shareText += `${i+1}. ${a.store} (${a.type}) - ${a.time}\n`; });
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'تقرير المواعيد الميداني',
+                    text: shareText
+                }).catch(() => {});
+            } else {
+                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
+            }
+        }
+
+        function addAppointment(e) {
+            e.preventDefault();
+            const store = document.getElementById('app-store').value;
+            const type = document.getElementById('app-type').value;
+            const datetimeVal = document.getElementById('app-date-picker').value;
+
+            if(!datetimeVal) {
+                alert('يرجى تحديد تاريخ ووقت الموعد');
+                return;
+            }
+
+            const dt = new Date(datetimeVal);
+            const formattedDate = dt.toLocaleDateString('ar-IQ') + ' - الساعة ' + dt.toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' });
+
+            appointments.unshift({
+                id: 'app-' + Date.now(),
+                gov: currentGovernorate,
+                store,
+                type,
+                time: formattedDate,
+                rawDate: datetimeVal
+            });
+
+            localStorage.setItem('pharma_appts', JSON.stringify(appointments));
+            
+            renderAppointments();
+            renderReports();
+            renderHomeActivity();
+            updateSmartReminder();
+
+            alert('تم حفظ الموعد وترحيله فوراً إلى جدول التقارير الأسبوعية للمدير!');
+            switchPage('reports');
+        }
+
+        function sendWeeklyScheduleToManager() {
+            const govAppts = appointments.filter(a => a.gov === currentGovernorate);
+            if(govAppts.length === 0) {
+                alert('لا توجد مواعيد أو مهام مسجلة حالياً لإرسالها للمدير');
+                return;
+            }
+
+            let msg = `📅 *جدول المواعيد وخطة العمل الأسبوعية للمندوب*\n`;
+            msg += `---------------------------------\n`;
+            msg += `🏛 *المحافظة:* ${currentGovernorate}\n`;
+            msg += `📊 *إجمالي المواعيد والمهام:* ${govAppts.length}\n`;
+            msg += `---------------------------------\n`;
+            msg += `📋 *قائمة المواعيد والزيارات المحددة:*\n\n`;
+
+            govAppts.forEach((appt, index) => {
+                msg += `*${index + 1}. ${appt.store}*\n`;
+                msg += `   • نوع المهمة: ${appt.type}\n`;
+                msg += `   • الموعد: ${appt.time}\n\n`;
+            });
+
+            msg += `---------------------------------\n`;
+            msg += `تحياتي، مندوب الفارما 💊`;
+
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function exportWeeklySchedulePDF() {
+            const govAppts = appointments.filter(a => a.gov === currentGovernorate);
+            if(govAppts.length === 0) {
+                alert('لا توجد مواعيد مسجلة لتصديرها');
+                return;
+            }
+
+            document.getElementById('pdf-doc-title').textContent = 'تقرير المواعيد وخطة العمل الأسبوعية للمندوب';
+            document.getElementById('pdf-date').textContent = new Date().toLocaleDateString('ar-IQ');
+            document.getElementById('pdf-gov').textContent = currentGovernorate;
+            document.getElementById('pdf-store').textContent = 'كافة المذاخر المشمولة بالزيارات';
+            document.getElementById('pdf-total').textContent = `${govAppts.length} مواعيد ومهام`;
+
+            document.getElementById('pdf-table-body').innerHTML = govAppts.map((a, idx) => `
+                <tr>
+                    <td>${idx + 1}</td>
+                    <td>${a.store}</td>
+                    <td>${a.type}</td>
+                    <td colspan="2">${a.time}</td>
+                </tr>
+            `).join('');
+
+            const element = document.getElementById('invoice-template');
+            element.style.display = 'block';
+
+            html2pdf().set({
+                margin: 0.5,
+                filename: `تقرير_المواعيد_الأسبوعي_${currentGovernorate}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            }).from(element).save().then(() => {
+                element.style.display = 'none';
+            });
+        }
+
+        function openDetailsModal(type, index) {
+            const data = (type === 'order') ? orders.filter(o => o.gov === currentGovernorate)[index] : returnsList.filter(r => r.gov === currentGovernorate)[index];
+            if(!data) return;
+
+            activeModalData = data;
+            const isRet = data.isReturn;
+
+            document.getElementById('modal-title').textContent = isRet ? 'تفاصيل وصل المرتجع' : 'تفاصيل الفاتورة والطلبية';
+            document.getElementById('modal-subtitle').textContent = `${data.store} (${data.gov}) | تاريخ: ${data.date}`;
+
+            let html = `
+                ${isRet && data.reason ? `<p style="font-size:11px; color:#c2410c; margin-bottom:6px;"><b>سبب الإرجاع:</b> ${data.reason}</p>` : ''}
+                <table class="invoice-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>المادة</th>
+                            <th>السعر</th>
+                            <th>العدد</th>
+                            <th>الإجمالي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.items.map((item, idx) => `
+                            <tr>
+                                <td>${idx + 1}</td>
+                                <td>${item.name} ${item.bonus ? `(+${item.bonus} بونص)` : ''}</td>
+                                <td>$${item.price}</td>
+                                <td>${item.qty}</td>
+                                <td>$${item.subtotal.toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#1b2a4a; color:#fff; padding:8px 10px; border-radius:8px; margin-top:8px;">
+                    <span style="font-size:11px;">المجموع الإجمالي:</span>
+                    <span style="font-size:15px; font-weight:900; color:var(--accent-yellow);">$${data.total.toFixed(2)}</span>
+                </div>
+            `;
+
+            document.getElementById('modal-content').innerHTML = html;
+
+            document.getElementById('modal-btn-wa').onclick = function() { sendToWhatsApp(activeModalData); };
+            document.getElementById('modal-btn-pdf').onclick = function() { generatePDF(activeModalData); };
+
+            document.getElementById('details-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('details-modal').style.display = 'none';
+        }
+
+        /* 4. البحث المباشر في الفواتير والحسابات */
+        function renderOrders() {
+            const query = (document.getElementById('search-orders-input')?.value || '').toLowerCase();
+            const filtered = orders.filter(o => o.gov === currentGovernorate && o.store.toLowerCase().includes(query));
+
+            document.getElementById('orders-list').innerHTML = filtered.map((o, idx) => `
+                <div class="item-card" onclick="openDetailsModal('order', ${idx})">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h4 style="color:var(--bg-dark); font-size:12.5px; font-weight:800;">${o.store}</h4>
+                        <span class="badge badge-yellow">$${o.total ? o.total.toFixed(2) : '0'}</span>
+                    </div>
+                    <p style="font-size:10.5px; color:#64748b; margin-top:2px;">عدد المواد: ${o.items ? o.items.length : 1} | ${o.date || ''} (اضغط للتفاصيل والطباعة)</p>
+                </div>
+            `).join('') || '<p style="font-size:11px; color:#64748b;">لا توجد فواتير مطابقة للبحث</p>';
+        }
+
+        function renderAppointments() {
+            const govAppts = appointments.filter(a => a.gov === currentGovernorate);
+            document.getElementById('appointments-list').innerHTML = govAppts.map(a => {
+                const storeObj = stores.find(s => s.name === a.store) || {};
+                const notes = storeObj.notes || 'لا توجد ملاحظات مدونة';
+
+                return `
+                    <div class="item-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color:var(--bg-dark); font-size:12.5px; font-weight:800;">${a.store} (${a.gov})</h4>
+                            <span class="badge badge-blue">${a.type}</span>
+                        </div>
+                        <p style="font-size:10.5px; color:#64748b; margin-top:3px;"><i class="fa-regular fa-calendar-days"></i> ${a.time}</p>
+                        <p style="font-size:9.5px; color:#0284c7; margin-top:2px;">📝 <b>ملاحظة المذخر:</b> ${notes}</p>
+                        <button class="btn-action btn-map" style="margin-top:6px; width:100%; font-size:10px; padding:4px;" onclick="openStoreOnMap('${a.store}')">
+                            <i class="fa-solid fa-map-location-dot"></i> فتح موقع المذخر على Google Maps
+                        </button>
+                    </div>
+                `;
+            }).join('') || '<p style="font-size:11px; color:#64748b;">لا توجد مواعيد مسجلة</p>';
+        }
+
+        function renderAccounts() {
+            let totalDebts = 0, totalPaid = 0;
+            const query = (document.getElementById('search-accounts-input')?.value || '').toLowerCase();
+            const filteredAccounts = accountStatements.filter(acc => acc.gov === currentGovernorate && acc.store.toLowerCase().includes(query));
+
+            document.getElementById('accounts-list').innerHTML = filteredAccounts.map(acc => {
+                totalDebts += acc.debt;
+                totalPaid += acc.paid;
+                return `
+                    <div class="item-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                            <h4 style="color:var(--bg-dark); font-size:12.5px; font-weight:800;">${acc.store}</h4>
+                            <span class="badge ${acc.debt > 0 ? 'badge-red' : 'badge-green'}">${acc.status}</span>
+                        </div>
+                        <p style="font-size:10.5px; color:#475569;"><b>البيان/المرجع:</b> ${acc.ref}</p>
+                        <div style="display:flex; justify-content:space-between; font-size:10.5px; margin-top:4px; background:#f8fafc; padding:4px 6px; border-radius:6px;">
+                            <span style="color:#166534; font-weight:700;">المسدد: $${acc.paid}</span>
+                            <span style="color:#991b1b; font-weight:700;">المتبقي: $${acc.debt}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('') || `<p style="font-size:11px; color:#64748b;">لا توجد كشوفات حساب مطابقة لـ ${currentGovernorate}</p>`;
+
+            document.getElementById('total-debts').textContent = '$' + totalDebts;
+            document.getElementById('total-paid').textContent = '$' + totalPaid;
+        }
+
+        function renderReports() {
+            const govAppts = appointments.filter(a => a.gov === currentGovernorate);
+            const govOrders = orders.filter(o => o.gov === currentGovernorate);
+            const govReturns = returnsList.filter(r => r.gov === currentGovernorate);
+
+            document.getElementById('weekly-report-table-body').innerHTML = govAppts.map((a, idx) => `
+                <tr>
+                    <td><b>${idx + 1}</b></td>
+                    <td><b>${a.store}</b></td>
+                    <td><span class="badge badge-yellow" style="font-size:8.5px;">${a.type}</span></td>
+                    <td style="font-size:9.5px;">${a.time}</td>
+                </tr>
+            `).join('') || '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">لا توجد مواعيد مسجلة في التقرير الحالي</td></tr>';
+
+            let totalSalesSum = govOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+            let totalReturnsSum = govReturns.reduce((sum, r) => sum + (r.total || 0), 0);
+
+            renderAnalyticsChart(totalSalesSum, totalReturnsSum);
+        }
+
+        function renderAnalyticsChart(sales, returnsVal) {
+            const ctx = document.getElementById('analyticsChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['إجمالي المبيعات ($)', 'إجمالي المرتجعات ($)'],
+                    datasets: [{
+                        data: [sales || 1, returnsVal || 0],
+                        backgroundColor: ['#1b2a4a', '#c2410c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'Cairo', size: 10 } } } }
+                }
+            });
+        }
+
+        function renderHomeActivity() {
+            let html = '';
+            const govAppts = appointments.filter(a => a.gov === currentGovernorate);
+            const govOrders = orders.filter(o => o.gov === currentGovernorate);
+
+            if (govAppts.length > 0) {
+                html += `
+                    <div class="item-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color:var(--bg-dark); font-size:12.5px; font-weight:800;">${govAppts[0].store}</h4>
+                            <span class="badge badge-blue">${govAppts[0].type}</span>
+                        </div>
+                        <p style="font-size:10.5px; color:#64748b; margin-top:3px;">${govAppts[0].time}</p>
+                    </div>
+                `;
+            }
+            if (govOrders.length > 0) {
+                html += `
+                    <div class="item-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="color:var(--bg-dark); font-size:12.5px; font-weight:800;">${govOrders[0].store}</h4>
+                            <span class="badge badge-yellow">فاتورة جديدة</span>
+                        </div>
+                        <p style="font-size:10.5px; color:#64748b; margin-top:3px;">إجمالي الفاتورة: $${govOrders[0].total ? govOrders[0].total.toFixed(2) : '0'}</p>
+                    </div>
+                `;
+            }
+            document.getElementById('home-activity-list').innerHTML = html || '<p style="font-size:11px; color:#64748b; text-align:center;">لا توجد أنشطة مسجلة</p>';
+        }
+
+        function exportBackupJSON() {
+            const backupData = {
+                repGov: currentGovernorate,
+                monthlyTarget,
+                stores,
+                products,
+                appointments,
+                orders,
+                returnsList,
+                accountStatements
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Pharma_Backup_${new Date().toLocaleDateString('ar-IQ')}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importBackupJSON(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    if(data.stores) localStorage.setItem('pharma_stores', JSON.stringify(data.stores));
+                    if(data.products) localStorage.setItem('pharma_products', JSON.stringify(data.products));
+                    if(data.appointments) localStorage.setItem('pharma_appts', JSON.stringify(data.appointments));
+                    if(data.orders) localStorage.setItem('pharma_orders', JSON.stringify(data.orders));
+                    if(data.returnsList) localStorage.setItem('pharma_returns', JSON.stringify(data.returnsList));
+                    if(data.accountStatements) localStorage.setItem('pharma_accounts', JSON.stringify(data.accountStatements));
+                    if(data.repGov) localStorage.setItem('pharma_rep_gov', data.repGov);
+                    if(data.monthlyTarget) localStorage.setItem('pharma_target', data.monthlyTarget);
+
+                    alert('تمت استعادة كافة البيانات بنجاح!');
+                    location.reload();
+                } catch(err) {
+                    alert('ملف النسخة الاحتياطية غير صالح');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-view').forEach(view => view.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+
+            document.getElementById(`view-${pageId}`).classList.add('active');
+            const targetNav = document.getElementById(`nav-${pageId}`);
+            if(targetNav) targetNav.classList.add('active');
+
+            if(pageId === 'reports') renderReports();
+            if(pageId === 'accounts') renderAccounts();
+            if(pageId === 'returns') renderReturns();
+            if(pageId === 'appointments') renderAppointments();
+            if(pageId === 'orders') renderOrders();
+        }
+
+        function clearData() {
+            if(confirm('هل تريد إعادة ضبط كافة البيانات المسجلة؟')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // بدء التشغيل
+        initApp();
+        addProductRow();
+        renderAppointments();
+        renderOrders();
+        renderReturns();
+        renderAccounts();
+        renderReports();
+        renderHomeActivity();
+    </script>
+</body>
+</html>
