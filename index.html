@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>تطبيق مندوب الفارما - PharmaLogistify</title>
 
-    <!-- الخطوط والأيقونات والمكتبات (SheetJS, html2pdf, Chart.js) -->
+    <!-- الخطوط والأيقونات والمكتبات -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -470,7 +470,7 @@
 <body>
 
     <div class="phone-container">
-        <!-- الهيدر العلوي التجاري -->
+        <!-- الهيدر العلوي -->
         <div class="header">
             <div class="brand-logo">
                 <span>PharmaLogistify</span>
@@ -740,7 +740,8 @@
                 <label style="font-size:11.5px; font-weight:800; color:var(--bg-dark); display:block; margin-bottom:4px;">
                     <i class="fa-solid fa-file-excel" style="color:#166534; font-size:15px;"></i> رفع ملف إكسل كشف حساب المذاخر التفصيلي
                 </label>
-                <input type="file" id="account-excel-file" accept=".xlsx, .xls, .csv" onchange="importAccountExcel(event)" class="form-control" style="padding:4px;">
+                <!-- تم توسيع accept لتظهر كافة الملفات بدون حظر بالهاتف -->
+                <input type="file" id="account-excel-file" accept="*/*" onchange="importAccountExcel(event)" class="form-control" style="padding:4px;">
             </div>
 
             <div class="stat-grid">
@@ -870,7 +871,7 @@
                 <label style="font-size:11.5px; font-weight:800; color:var(--bg-dark); display:block; margin-bottom:4px;">
                     <i class="fa-solid fa-file-excel" style="color:#166534; font-size:15px;"></i> رفع إكسل مواد الشركة
                 </label>
-                <input type="file" accept=".xlsx, .xls, .csv" onchange="importProductsExcel(event)" class="form-control" style="padding:4px;">
+                <input type="file" accept="*/*" onchange="importProductsExcel(event)" class="form-control" style="padding:4px;">
             </div>
 
             <form class="form-box" onsubmit="addNewStore(event)">
@@ -1089,12 +1090,85 @@
             });
         }
 
-        /* دالة استيراد وتوجيه حسابات الإكسل الذكية إلى المذاخر */
+        /* 🔄 دالة استيراد وتوجيه حسابات الإكسل والـ CSV مع دعم العمل بدون إنترنت (أوفلاين للهاتف) */
         function importAccountExcel(e) {
             const file = e.target.files[0];
             if(!file) return;
 
             const reader = new FileReader();
+
+            // إذا كان الملف CSV أو النصي أو المكتبة غير متوفرة أوفلاين، نقرأه كنص مباشر
+            if (typeof XLSX === 'undefined' || file.name.endsWith('.csv') || file.name.endsWith('.txt')) {
+                reader.onload = function(evt) {
+                    try {
+                        const text = evt.target.result;
+                        const lines = text.split(/\r\n|\n/);
+                        if (lines.length < 2) {
+                            alert('الملف المرفوع فارغ أو لا يحتوي على بيانات كافية!');
+                            return;
+                        }
+
+                        const delimiter = lines[0].includes('\t') ? '\t' : (lines[0].includes(';') ? ';' : ',');
+                        const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^["']|["']$/g, ''));
+                        const newAccounts = [];
+
+                        for (let i = 1; i < lines.length; i++) {
+                            const lineStr = lines[i].trim();
+                            if (!lineStr) continue;
+                            const cols = lineStr.split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
+
+                            let storeName = cols[0] || 'مذخر غير محدد';
+                            let paidVal = 0, debtVal = 0, refVal = 'كشف حساب مرفوع';
+
+                            headers.forEach((h, idx) => {
+                                const hLower = h.toLowerCase();
+                                const val = cols[idx] || '';
+                                if (hLower.includes('مذخر') || hLower.includes('اسم') || hLower.includes('زبون') || hLower.includes('store')) {
+                                    storeName = val || storeName;
+                                } else if (hLower.includes('مسدد') || hLower.includes('واصل') || hLower.includes('مقبوضات') || hLower.includes('paid')) {
+                                    paidVal = parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
+                                } else if (hLower.includes('متبقي') || hLower.includes('دين') || hLower.includes('مطلوب') || hLower.includes('debt')) {
+                                    debtVal = parseFloat(val.replace(/[^0-9.-]+/g, "")) || 0;
+                                } else if (hLower.includes('بيان') || hLower.includes('مرجع') || hLower.includes('ملاحظة')) {
+                                    refVal = val || refVal;
+                                }
+                            });
+
+                            if (!storeName) continue;
+
+                            // ربط المذخر تلقائياً بالمحافظة
+                            let matchedStore = stores.find(s => s.name.trim() === storeName || storeName.includes(s.name.trim()));
+                            let targetGov = matchedStore ? matchedStore.gov : currentGovernorate;
+
+                            if (!matchedStore) {
+                                stores.push({ gov: currentGovernorate, name: storeName, notes: 'تم استيراده تلقائياً من الكشف' });
+                                localStorage.setItem('pharma_stores', JSON.stringify(stores));
+                                updateStoreDropdowns();
+                            }
+
+                            newAccounts.push({
+                                store: storeName,
+                                gov: targetGov,
+                                ref: refVal,
+                                paid: paidVal,
+                                debt: debtVal,
+                                status: debtVal > 0 ? 'عليه دين' : 'مستوفي'
+                            });
+                        }
+
+                        accountStatements = newAccounts;
+                        localStorage.setItem('pharma_accounts', JSON.stringify(accountStatements));
+                        renderAccounts();
+                        alert(`تم بنجاح رفع وربط ${accountStatements.length} مذخر من الملف! 📊`);
+                    } catch (err) {
+                        alert('خطأ في قراءة ملف CSV: ' + err.message);
+                    }
+                };
+                reader.readAsText(file, 'utf-8');
+                return;
+            }
+
+            // قراءة ملفات Excel الحقيقية (.xlsx / .xls) عبر SheetJS
             reader.onload = function(evt) {
                 try {
                     const data = new Uint8Array(evt.target.result);
@@ -1103,16 +1177,13 @@
                     const json = XLSX.utils.sheet_to_json(sheet);
 
                     if (!json || json.length === 0) {
-                        alert('الملف المرفوع فارغ أو غير صالح!');
+                        alert('ملف الإكسل فارغ أو لا يحتوي على صفوف بيانات!');
                         return;
                     }
 
                     const newAccounts = [];
-
                     json.forEach(row => {
                         const keys = Object.keys(row);
-
-                        // 1. البحث المرن عن اسم المذخر بالملف
                         let storeName = '';
                         for (let k of keys) {
                             const cleanKey = k.trim().toLowerCase();
@@ -1122,31 +1193,26 @@
                             }
                         }
                         if (!storeName && keys.length > 0) storeName = String(row[keys[0]]).trim();
-
                         if (!storeName) return;
 
-                        // 2. البحث المباشر عن المذخر في قائمة المذاخر المسجلة للحصول على محافظته
-                        const matchedStore = stores.find(s => s.name.trim() === storeName || storeName.includes(s.name.trim()));
-                        const targetGov = matchedStore ? matchedStore.gov : currentGovernorate;
+                        let matchedStore = stores.find(s => s.name.trim() === storeName || storeName.includes(s.name.trim()));
+                        let targetGov = matchedStore ? matchedStore.gov : currentGovernorate;
 
-                        // إذا كان المذخر غير موجود كلياً، نضيفه تلقائياً ليكون مرتبطاً بالنظام
                         if (!matchedStore) {
                             stores.push({ gov: currentGovernorate, name: storeName, notes: 'تم استيراده تلقائياً من كشف الحساب' });
                             localStorage.setItem('pharma_stores', JSON.stringify(stores));
                             updateStoreDropdowns();
                         }
 
-                        // 3. استخراج المبالغ والبيان
                         let paidVal = 0, debtVal = 0, refVal = 'كشف حساب مرفوع';
-
                         for (let k of keys) {
-                            const cleanKey = k.trim();
-                            const rawVal = String(row[k]).replace(/[^0-9.-]+/g, ""); // تنظيف الرقم من العبارات
+                            const cleanKey = k.trim().toLowerCase();
+                            const rawVal = String(row[k]).replace(/[^0-9.-]+/g, "");
                             const numVal = parseFloat(rawVal) || 0;
 
-                            if (cleanKey.includes('مسدد') || cleanKey.includes('واصل') || cleanKey.includes('مقبوضات') || cleanKey.includes('Paid')) {
+                            if (cleanKey.includes('مسدد') || cleanKey.includes('واصل') || cleanKey.includes('مقبوضات') || cleanKey.includes('paid')) {
                                 paidVal = numVal;
-                            } else if (cleanKey.includes('متبقي') || cleanKey.includes('دين') || cleanKey.includes('مطلوب') || cleanKey.includes('Debt') || cleanKey.includes('Balance')) {
+                            } else if (cleanKey.includes('متبقي') || cleanKey.includes('دين') || cleanKey.includes('مطلوب') || cleanKey.includes('debt') || cleanKey.includes('balance')) {
                                 debtVal = numVal;
                             } else if (cleanKey.includes('بيان') || cleanKey.includes('مرجع') || cleanKey.includes('ملاحظة') || cleanKey.includes('قائمة')) {
                                 refVal = String(row[k]);
@@ -1165,11 +1231,10 @@
 
                     accountStatements = newAccounts;
                     localStorage.setItem('pharma_accounts', JSON.stringify(accountStatements));
-                    
                     renderAccounts();
-                    alert(`تم ربط ورفع ${accountStatements.length} كشف حساب بنجاح للمذاخر!`);
+                    alert(`تم ربط ورفع ${accountStatements.length} كشف حساب بنجاح للمذاخر! 📊`);
                 } catch(err) {
-                    alert('حدث خطأ أثناء قراءة ملف الإكسل. يرجى التأكد من بصيغة الملف (.xlsx أو .xls)');
+                    alert('خطأ في معالجة ملف الإكسل: ' + err.message);
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -1324,20 +1389,24 @@
 
             const reader = new FileReader();
             reader.onload = function(evt) {
-                const data = new Uint8Array(evt.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-                products = json.map(row => ({
-                    name: row['اسم المادة'] || row['المادة'] || row['Item'] || Object.values(row)[0],
-                    price: parseFloat(row['السعر'] || row['Price'] || row['سعر'] || 0)
-                })).filter(p => p.name);
+                    products = json.map(row => ({
+                        name: row['اسم المادة'] || row['المادة'] || row['Item'] || Object.values(row)[0],
+                        price: parseFloat(row['السعر'] || row['Price'] || row['سعر'] || 0)
+                    })).filter(p => p.name);
 
-                localStorage.setItem('pharma_products', JSON.stringify(products));
-                document.getElementById('products-container').innerHTML = '';
-                addProductRow();
-                renderReturnProductsDropdown();
-                alert(`تم تحديث ${products.length} مادة من إكسل مواد الشركة!`);
+                    localStorage.setItem('pharma_products', JSON.stringify(products));
+                    document.getElementById('products-container').innerHTML = '';
+                    addProductRow();
+                    renderReturnProductsDropdown();
+                    alert(`تم تحديث ${products.length} مادة من إكسل مواد الشركة!`);
+                } catch(err) {
+                    alert('خطأ في استيراد مواد الشركة: ' + err.message);
+                }
             };
             reader.readAsArrayBuffer(file);
         }
