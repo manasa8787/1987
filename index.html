@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>تطبيق مندوب الفارما - النظام الشامل الذكي</title>
+    <title>تطبيق مندوب الفارما - PharmaLogistify</title>
 
     <!-- الخطوط والأيقونات والمكتبات (SheetJS, html2pdf, Chart.js) -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -43,9 +43,9 @@
 
         .phone-container {
             width: 100%;
-            max-width: 420px;
+            max-width: 430px;
             height: 100vh;
-            max-height: 880px;
+            max-height: 900px;
             background-color: var(--bg-light);
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
             display: flex;
@@ -56,34 +56,22 @@
 
         @media (min-width: 480px) {
             .phone-container {
-                height: 92vh;
-                border-radius: 36px;
-                border: 8px solid #222;
+                height: 94vh;
+                border-radius: 32px;
+                border: 6px solid #1a2332;
             }
         }
 
-        .status-bar {
-            background-color: var(--bg-dark);
-            color: var(--text-white);
-            padding: 10px 20px 5px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            font-weight: 700;
-            z-index: 10;
-        }
-
-        .status-icons i { margin-left: 5px; font-size: 12px; }
-
+        /* الهيدر العلوي للتطبيق الحقيقي */
         .header {
             background-color: var(--bg-dark);
-            padding: 12px 20px;
+            padding: 16px 20px 14px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
             z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .brand-logo {
@@ -92,16 +80,59 @@
             gap: 8px;
             color: var(--text-white);
             font-weight: 800;
-            font-size: 17px;
+            font-size: 18px;
         }
 
         .brand-logo span { color: var(--accent-yellow); }
-        .brand-logo i { color: var(--accent-yellow); font-size: 18px; }
+        .brand-logo i { color: var(--accent-yellow); font-size: 20px; }
+
+        /* بطاقة الترحيب باسم المندوب */
+        .welcome-card {
+            background: linear-gradient(135deg, var(--bg-card-blue) 0%, #0d1b2a 100%);
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 14px rgba(27, 42, 74, 0.25);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(230, 161, 0, 0.2);
+        }
+
+        .welcome-text h3 {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-white);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .welcome-text p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            font-weight: 600;
+        }
+
+        .rep-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-yellow), #d99100);
+            color: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 900;
+            box-shadow: 0 2px 8px rgba(230, 161, 0, 0.4);
+        }
 
         .smart-reminder-bar {
             background: linear-gradient(90deg, #1e3a8a, #0284c7);
             color: #fff;
-            padding: 6px 14px;
+            padding: 7px 14px;
             font-size: 11px;
             font-weight: 700;
             display: flex;
@@ -112,11 +143,12 @@
 
         .target-box {
             background: #ffffff;
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 10px 12px;
             margin-bottom: 12px;
             border: 1px solid #e2e8f0;
             color: var(--bg-dark);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         }
 
         .progress-bar-bg {
@@ -172,10 +204,10 @@
         .card-item {
             display: flex;
             align-items: center;
-            border-radius: 14px;
-            padding: 10px 14px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-            transition: transform 0.15s;
+            border-radius: 16px;
+            padding: 12px 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.15s, box-shadow 0.15s;
             cursor: pointer;
         }
 
@@ -189,9 +221,9 @@
         .card-yellow .card-number, .card-yellow .card-icon { color: var(--bg-dark); }
         .card-yellow .card-subtext { color: #2c2000; }
 
-        .card-number { font-size: 28px; font-weight: 900; line-height: 1; min-width: 40px; }
+        .card-number { font-size: 26px; font-weight: 900; line-height: 1; min-width: 40px; }
         .card-details { flex: 1; padding-right: 8px; }
-        .card-title { font-size: 16px; font-weight: 800; margin-bottom: 2px; }
+        .card-title { font-size: 15.5px; font-weight: 800; margin-bottom: 2px; }
         .card-subtext { font-size: 10.5px; font-weight: 600; }
         .card-icon { font-size: 20px; margin-left: 5px; }
 
@@ -230,7 +262,7 @@
         .form-box {
             background: #ffffff;
             padding: 12px;
-            border-radius: 12px;
+            border-radius: 14px;
             margin-bottom: 14px;
             border: 1px solid #e2e8f0;
         }
@@ -246,8 +278,8 @@
 
         .form-control {
             width: 100%;
-            padding: 8px 10px;
-            border-radius: 8px;
+            padding: 9px 11px;
+            border-radius: 10px;
             border: 1px solid #cbd5e1;
             font-size: 12px;
             outline: none;
@@ -304,7 +336,7 @@
             background: var(--bg-card-blue);
             color: var(--text-white);
             padding: 10px;
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -344,8 +376,8 @@
             background-color: var(--bg-card-blue);
             color: var(--text-white);
             border: none;
-            padding: 9px;
-            border-radius: 8px;
+            padding: 10px;
+            border-radius: 10px;
             font-weight: 800;
             font-size: 12.5px;
             cursor: pointer;
@@ -359,9 +391,10 @@
             background-color: #ffffff;
             display: flex;
             justify-content: space-around;
-            padding: 6px 0 10px 0;
+            padding: 8px 0 12px 0;
             border-top: 1px solid #e2e8f0;
             z-index: 10;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.03);
         }
 
         .nav-item {
@@ -377,11 +410,11 @@
             cursor: pointer;
         }
 
-        .nav-item i { font-size: 15px; }
+        .nav-item i { font-size: 16px; }
         .nav-item.active { color: var(--accent-yellow); }
 
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-        .stat-box { background: #ffffff; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; }
+        .stat-box { background: #ffffff; padding: 8px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; }
         .stat-box h5 { color: #64748b; font-size: 10px; }
         .stat-box span { color: var(--bg-dark); font-size: 14px; font-weight: 900; }
 
@@ -398,7 +431,7 @@
 
         .modal-card {
             background: #ffffff;
-            border-radius: 16px;
+            border-radius: 18px;
             width: 100%;
             max-width: 380px;
             max-height: 85vh;
@@ -439,22 +472,13 @@
 <body>
 
     <div class="phone-container">
-        <!-- شريط الحالة -->
-        <div class="status-bar">
-            <span id="current-time">09:41</span>
-            <div class="status-icons">
-                <i class="fa-solid fa-signal"></i>
-                <i class="fa-solid fa-wifi"></i>
-                <i class="fa-solid fa-battery-full"></i>
-            </div>
-        </div>
-
-        <!-- الهيدر -->
+        <!-- الهيدر العلوي التجاري -->
         <div class="header">
             <div class="brand-logo">
                 <span>PharmaLogistify</span>
                 <i class="fa-solid fa-network-wired"></i>
             </div>
+            <div style="font-size:11px; color:var(--text-muted); font-weight:700;" id="app-current-date"></div>
         </div>
 
         <!-- شريط التنبيه الذكي -->
@@ -465,7 +489,14 @@
 
         <!-- 1. الرئيسية -->
         <div id="view-home" class="page-view active">
-            <h2 class="page-header-title" style="justify-content: center;">لوحة التحكم - مندوب الفارما</h2>
+            <!-- رسالة الترحيب باسم المندوب -->
+            <div class="welcome-card">
+                <div class="welcome-text">
+                    <h3 id="welcome-greeting">أهلاً بك، أستاذ شبر الحمامي 👋</h3>
+                    <p id="welcome-subtext">مندوب المبيعات الطبية المتخصص</p>
+                </div>
+                <div class="rep-avatar">ش</div>
+            </div>
 
             <!-- شريط الهدف والتاركت الشهري -->
             <div class="target-box">
@@ -527,8 +558,8 @@
                 <div class="card-item card-yellow" onclick="switchPage('settings')">
                     <div class="card-number">06</div>
                     <div class="card-details">
-                        <div class="card-title">الإعدادات والتاركت</div>
-                        <div class="card-subtext">تعديل الهدف النسخ والملفات</div>
+                        <div class="card-title">الإعدادات والدرايف</div>
+                        <div class="card-subtext">الربط السحابي والنسخ الاحتياطي</div>
                     </div>
                     <div class="card-icon"><i class="fa-solid fa-gear"></i></div>
                 </div>
@@ -583,7 +614,6 @@
                 <div></div>
             </div>
 
-            <!-- محرك البحث السريع -->
             <div class="form-group">
                 <input type="text" id="search-orders-input" placeholder="🔍 بحث في الفواتير باسم المذخر..." class="form-control" oninput="renderOrders()">
             </div>
@@ -650,7 +680,7 @@
             <div id="orders-list"></div>
         </div>
 
-        <!-- 4. المرتجعات مع تاريخ الصلاحية والتنبيه المبكر -->
+        <!-- 4. المرتجعات -->
         <div id="view-returns" class="page-view">
             <div class="page-header-title">
                 <button class="btn-back" onclick="switchPage('home')"><i class="fa-solid fa-arrow-right"></i></button>
@@ -697,7 +727,7 @@
             <div id="returns-list"></div>
         </div>
 
-        <!-- 5. الحسابات والبحث المباشر -->
+        <!-- 5. الحسابات -->
         <div id="view-accounts" class="page-view">
             <div class="page-header-title">
                 <button class="btn-back" onclick="switchPage('home')"><i class="fa-solid fa-arrow-right"></i></button>
@@ -731,7 +761,7 @@
             <div id="accounts-list"></div>
         </div>
 
-        <!-- 6. التقارير والمشاركة السريعة -->
+        <!-- 6. التقارير والمشاركة -->
         <div id="view-reports" class="page-view">
             <div class="page-header-title">
                 <button class="btn-back" onclick="switchPage('home')"><i class="fa-solid fa-arrow-right"></i></button>
@@ -779,12 +809,32 @@
             </div>
         </div>
 
-        <!-- 7. الإعدادات والتاركت المالي -->
+        <!-- 7. الإعدادات -->
         <div id="view-settings" class="page-view">
             <div class="page-header-title">
                 <button class="btn-back" onclick="switchPage('home')"><i class="fa-solid fa-arrow-right"></i></button>
-                <span>الإعدادات والتاركت والنسخ</span>
+                <span>الإعدادات والربط السحابي</span>
                 <div></div>
+            </div>
+
+            <!-- تعديل اسم المندوب -->
+            <div class="form-box" style="border: 2px solid var(--bg-card-blue);">
+                <h4 style="font-size:11.5px; font-weight:800; color:var(--bg-card-blue); margin-bottom:6px;"><i class="fa-solid fa-user-gear"></i> اسم المندوب المخصص</h4>
+                <div class="form-group">
+                    <input type="text" id="rep-name-input" class="form-control" value="شبر الحمامي" onchange="saveRepresentativeName()">
+                </div>
+            </div>
+
+            <!-- الربط مع Google Drive -->
+            <div class="form-box" style="border: 2px solid #166534;">
+                <h4 style="font-size:11.5px; font-weight:800; color:#166534; margin-bottom:6px;"><i class="fa-brands fa-google-drive"></i> الربط السحابي مع Google Drive</h4>
+                <div class="form-group">
+                    <label>رابط Google Apps Script (Web App URL)</label>
+                    <input type="text" id="gdrive-script-url" class="form-control" placeholder="الصق الرابط هنا..." onchange="saveDriveUrl()">
+                </div>
+                <button onclick="syncToGoogleDrive()" class="btn-submit" style="background:#166534; font-size:11px; padding:7px;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> حفظ البيانات سحابياً بالدرايف الآن
+                </button>
             </div>
 
             <!-- تعديل التاركت الشهري -->
@@ -810,7 +860,7 @@
             </div>
 
             <div class="form-box" style="border: 2px solid #0284c7;">
-                <h4 style="font-size:11.5px; font-weight:800; color:#0284c7; margin-bottom:6px;"><i class="fa-solid fa-database"></i> النسخ الاحتياطي والاسترجاع</h4>
+                <h4 style="font-size:11.5px; font-weight:800; color:#0284c7; margin-bottom:6px;"><i class="fa-solid fa-database"></i> النسخ الاحتياطي اليدوي</h4>
                 <div style="display:flex; gap:6px;">
                     <button onclick="exportBackupJSON()" class="btn-submit" style="background:#0284c7; font-size:11px; padding:7px;">
                         <i class="fa-solid fa-download"></i> تصدير نسخة
@@ -943,7 +993,9 @@
 
     <script>
         let currentGovernorate = localStorage.getItem('pharma_rep_gov') || 'النجف الأشرف';
+        let repName = localStorage.getItem('pharma_rep_name') || 'شبر الحمامي';
         let monthlyTarget = parseFloat(localStorage.getItem('pharma_target')) || 10000;
+        let gdriveUrl = localStorage.getItem('pharma_gdrive_url') || '';
 
         let stores = JSON.parse(localStorage.getItem('pharma_stores')) || [
             { gov: 'النجف الأشرف', name: 'مذخر النجف المركزي', notes: 'تواجد صباحاً من 9 إلى 12' },
@@ -974,14 +1026,76 @@
             document.getElementById('app-gov-display').value = currentGovernorate;
             document.getElementById('ord-gov-display').value = currentGovernorate;
             document.getElementById('monthly-target-input').value = monthlyTarget;
+            document.getElementById('gdrive-script-url').value = gdriveUrl;
+            document.getElementById('rep-name-input').value = repName;
 
+            updateWelcomeHeader();
             updateStoreDropdowns();
             renderReturnProductsDropdown();
             updateSmartReminder();
             updateTargetProgressBar();
         }
 
-        /* 1. حساب التاركت والتقدم */
+        /* تحديث الرسالة الترحيبية باسم المندوب */
+        function updateWelcomeHeader() {
+            const hour = new Date().getHours();
+            const timeGreeting = hour < 12 ? 'صباح الخير' : 'مساء الخير';
+            document.getElementById('welcome-greeting').textContent = `${timeGreeting}، أستاذ ${repName} 👋`;
+            
+            const todayStr = new Date().toLocaleDateString('ar-IQ', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+            document.getElementById('app-current-date').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById('welcome-subtext').textContent = `${todayStr} - محافظتك: ${currentGovernorate}`;
+        }
+
+        function saveRepresentativeName() {
+            repName = document.getElementById('rep-name-input').value.trim() || 'شبر الحمامي';
+            localStorage.setItem('pharma_rep_name', repName);
+            updateWelcomeHeader();
+            alert('تم تحديث اسم المندوب بنجاح!');
+        }
+
+        function saveDriveUrl() {
+            gdriveUrl = document.getElementById('gdrive-script-url').value.trim();
+            localStorage.setItem('pharma_gdrive_url', gdriveUrl);
+        }
+
+        function syncToGoogleDrive() {
+            if(!gdriveUrl) {
+                alert('يرجى لصق رابط Google Apps Script في الحقل المخصص أولاً');
+                return;
+            }
+
+            const backupData = {
+                repName,
+                repGov: currentGovernorate,
+                monthlyTarget,
+                stores,
+                products,
+                appointments,
+                orders,
+                returnsList,
+                accountStatements
+            };
+
+            alert('جاري رفع البيانات سحابياً إلى Google Drive...');
+
+            fetch(gdriveUrl, {
+                method: 'POST',
+                body: JSON.stringify(backupData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    alert('تم الحفظ بنجاح في مجلد (PharmaLogistify_Backups) على Google Drive! ☁️');
+                } else {
+                    alert('حدث خطأ أثناء الرفع: ' + data.message);
+                }
+            })
+            .catch(err => {
+                alert('فشل الاتصال السحابي. تأكد من صحة الرابط أو اتصال الإنترنت.');
+            });
+        }
+
         function saveMonthlyTarget() {
             monthlyTarget = parseFloat(document.getElementById('monthly-target-input').value) || 10000;
             localStorage.setItem('pharma_target', monthlyTarget);
@@ -1175,13 +1289,11 @@
             reader.readAsArrayBuffer(file);
         }
 
-        /* 2. احتساب البونص التلقائي (10 + 1 مجاناً) */
         function autoCalculateBonus(rowId) {
             const row = document.getElementById(rowId);
             const qty = parseInt(row.querySelector('.prod-qty').value) || 0;
             const bonusInput = row.querySelector('.prod-bonus');
             
-            // قاعدة بونص تلقائي: كل 10 قطع تحصل على 1 مجاناً
             const autoBonus = Math.floor(qty / 10);
             bonusInput.value = autoBonus;
 
@@ -1336,6 +1448,7 @@
             msg += `---------------------------------\n`;
             msg += `🏛 *المحافظة:* ${data.gov}\n`;
             msg += `🏢 *المذخر:* ${data.store}\n`;
+            msg += `👤 *المندوب:* ${repName}\n`;
             msg += `📅 *التاريخ:* ${data.date}\n`;
             if(isRet && data.reason) msg += `⚠️ *سبب الإرجاع:* ${data.reason}\n`;
             if(!isRet && data.discountPercent > 0) msg += `🏷️ *نسبة الخصم:* ${data.discountPercent}%\n`;
@@ -1426,10 +1539,9 @@
             thermalDiv.style.display = 'none';
         }
 
-        /* 3. مشاركة سريعة Web Share API */
         function shareNativeReport() {
             const govAppts = appointments.filter(a => a.gov === currentGovernorate);
-            let shareText = `📅 *تقرير المواعيد لـ ${currentGovernorate}*\nعدد المواعيد: ${govAppts.length}\n`;
+            let shareText = `📅 *تقرير المواعيد لـ ${currentGovernorate}*\nالمندوب: ${repName}\nعدد المواعيد: ${govAppts.length}\n`;
             govAppts.forEach((a, i) => { shareText += `${i+1}. ${a.store} (${a.type}) - ${a.time}\n`; });
 
             if (navigator.share) {
@@ -1485,6 +1597,7 @@
 
             let msg = `📅 *جدول المواعيد وخطة العمل الأسبوعية للمندوب*\n`;
             msg += `---------------------------------\n`;
+            msg += `👤 *المندوب:* ${repName}\n`;
             msg += `🏛 *المحافظة:* ${currentGovernorate}\n`;
             msg += `📊 *إجمالي المواعيد والمهام:* ${govAppts.length}\n`;
             msg += `---------------------------------\n`;
@@ -1497,7 +1610,7 @@
             });
 
             msg += `---------------------------------\n`;
-            msg += `تحياتي، مندوب الفارما 💊`;
+            msg += `تحياتي، ${repName} 💊`;
 
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
@@ -1590,7 +1703,6 @@
             document.getElementById('details-modal').style.display = 'none';
         }
 
-        /* 4. البحث المباشر في الفواتير والحسابات */
         function renderOrders() {
             const query = (document.getElementById('search-orders-input')?.value || '').toLowerCase();
             const filtered = orders.filter(o => o.gov === currentGovernorate && o.store.toLowerCase().includes(query));
@@ -1728,6 +1840,7 @@
 
         function exportBackupJSON() {
             const backupData = {
+                repName,
                 repGov: currentGovernorate,
                 monthlyTarget,
                 stores,
@@ -1763,6 +1876,7 @@
                     if(data.accountStatements) localStorage.setItem('pharma_accounts', JSON.stringify(data.accountStatements));
                     if(data.repGov) localStorage.setItem('pharma_rep_gov', data.repGov);
                     if(data.monthlyTarget) localStorage.setItem('pharma_target', data.monthlyTarget);
+                    if(data.repName) localStorage.setItem('pharma_rep_name', data.repName);
 
                     alert('تمت استعادة كافة البيانات بنجاح!');
                     location.reload();
